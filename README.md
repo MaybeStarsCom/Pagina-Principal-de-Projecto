@@ -34,7 +34,7 @@ Desarrollar una solución informática funcional que resuelva la gestión de cit
 clinica-sistema/
 ├── backend/
 │   ├── config/
-│   │   ├── db.js           # Conexión MySQL (pool)
+│   │   ├── db.js           # Conexión SQL Server (2022)
 │   │   └── database.sql    # Esquema y datos iniciales
 │   ├── middleware/
 │   │   └── auth.js         # JWT verifyToken + requireRole
