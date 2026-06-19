@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Médicos — Medical System</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; font-family:Arial,Helvetica,sans-serif; }
+    :root {
+      --azul:#2563eb; --azul-dark:#1d4ed8; --azul-light:rgba(37,99,235,0.10);
+      --fondo:#0f172a; --panel:#1e293b; --panel2:#273549; --borde:#334155;
+      --texto:#f1f5f9; --sub:#94a3b8; --verde:#10b981; --amarillo:#f59e0b; --rojo:#ef4444;
+    }
+    body { background:var(--fondo); color:var(--texto); min-height:100vh; display:flex; }
+
+    .sidebar { width:240px; min-height:100vh; background:var(--panel); border-right:1px solid var(--borde); display:flex; flex-direction:column; position:fixed; top:0; left:0; z-index:100; }
+    .sidebar-logo { display:flex; align-items:center; gap:12px; padding:28px 24px 24px; border-bottom:1px solid var(--borde); }
+    .logo-circle { width:42px; height:42px; border-radius:50%; background:var(--azul); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .sidebar-logo span { font-size:16px; font-weight:700; }
+    .sidebar-logo small { font-size:11px; color:var(--sub); }
+    nav { flex:1; padding:20px 12px; display:flex; flex-direction:column; gap:4px; }
+    .nav-label { font-size:10px; color:var(--sub); letter-spacing:.1em; text-transform:uppercase; padding:16px 12px 6px; }
+    .nav-link { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px; color:var(--sub); text-decoration:none; font-size:14px; font-weight:500; transition:.2s; cursor:pointer; border:none; background:none; width:100%; text-align:left; }
+    .nav-link:hover { background:var(--panel2); color:var(--texto); }
+    .nav-link.active { background:var(--azul-light); color:var(--azul); border:1px solid rgba(37,99,235,0.25); }
+    .nav-link .icon { font-size:18px; width:22px; text-align:center; }
+    .sidebar-footer { padding:16px 12px; border-top:1px solid var(--borde); }
+    .user-card { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:var(--panel2); }
+    .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--azul),var(--azul-dark)); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; }
+    .user-info strong { font-size:13px; display:block; }
+    .user-info span { font-size:11px; color:var(--sub); }
+
+    .main { margin-left:240px; flex:1; display:flex; flex-direction:column; }
+    .topbar { background:var(--panel); border-bottom:1px solid var(--borde); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+    .topbar-left h1 { font-size:20px; font-weight:700; }
+    .topbar-left p { font-size:13px; color:var(--sub); margin-top:2px; }
+    .topbar-right { display:flex; gap:12px; }
+    .icon-btn { width:38px; height:38px; border-radius:10px; background:var(--panel2); border:1px solid var(--borde); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; color:var(--sub); transition:.2s; }
+    .icon-btn:hover { background:var(--borde); color:var(--texto); }
+    .content { padding:32px; flex:1; }
+
+    /* TOOLBAR */
+    .toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .search-box { display:flex; align-items:center; background:var(--panel2); border:1px solid var(--borde); border-radius:12px; padding:9px 14px; gap:8px; }
+    .search-box input { background:none; border:none; outline:none; color:var(--texto); font-size:14px; width:220px; }
+    .search-box input::placeholder { color:var(--sub); }
+    .btn-primary { padding:10px 20px; background:linear-gradient(135deg,var(--azul),var(--azul-dark)); color:white; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; transition:.2s; display:flex; align-items:center; gap:8px; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(37,99,235,.35); }
+
+    /* CARDS MÉDICOS */
+    .medicos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
+
+    .medico-card { background:var(--panel); border:1px solid var(--borde); border-radius:16px; padding:24px; transition:.2s; position:relative; overflow:hidden; }
+    .medico-card:hover { border-color:var(--azul); transform:translateY(-3px); box-shadow:0 8px 24px rgba(37,99,235,.15); }
+    .medico-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+    .medico-card.color-0::before { background:linear-gradient(90deg,#2563eb,#60a5fa); }
+    .medico-card.color-1::before { background:linear-gradient(90deg,#10b981,#34d399); }
+    .medico-card.color-2::before { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+    .medico-card.color-3::before { background:linear-gradient(90deg,#8b5cf6,#a78bfa); }
+    .medico-card.color-4::before { background:linear-gradient(90deg,#ef4444,#f87171); }
+
+    .med-header { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+    .med-avatar-lg { width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:white; flex-shrink:0; }
+    .med-header-info h3 { font-size:16px; font-weight:700; }
+    .med-header-info p { font-size:12px; color:var(--sub); margin-top:2px; }
+
+    .med-badge { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-top:6px; }
+    .badge-activo   { background:rgba(16,185,129,.15); color:var(--verde); }
+    .badge-inactivo { background:rgba(239,68,68,.15); color:var(--rojo); }
+
+    .med-details { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+    .med-detail { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--sub); }
+    .med-detail span:first-child { font-size:15px; }
+    .med-detail strong { color:var(--texto); }
+
+    .med-horario { background:var(--panel2); border-radius:10px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .med-horario span { font-size:12px; color:var(--sub); }
+    .med-horario strong { font-size:13px; color:var(--azul); }
+
+    .med-footer { display:flex; gap:8px; }
+    .btn-sm { flex:1; padding:8px; border-radius:10px; border:1px solid var(--borde); background:var(--panel2); color:var(--sub); font-size:12px; cursor:pointer; transition:.2s; text-align:center; }
+    .btn-sm:hover { color:var(--texto); border-color:var(--azul); }
+    .btn-sm.danger:hover { color:var(--rojo); border-color:var(--rojo); }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:var(--panel); border:1px solid var(--borde); border-radius:20px; padding:32px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; }
+    .modal h2 { font-size:18px; font-weight:700; margin-bottom:6px; }
+    .modal > p { font-size:13px; color:var(--sub); margin-bottom:24px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-group.full { grid-column:1/-1; }
+    .form-group label { font-size:12px; color:var(--sub); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+    .form-group input, .form-group select { padding:11px 14px; background:var(--panel2); border:1px solid var(--borde); border-radius:12px; color:var(--texto); font-size:14px; outline:none; transition:.2s; }
+    .form-group input:focus, .form-group select:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+    .form-group select option { background:var(--panel2); }
+    .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+    .btn-cancel { padding:10px 20px; background:var(--panel2); color:var(--sub); border:1px solid var(--borde); border-radius:12px; font-size:13px; cursor:pointer; }
+
+    .empty { text-align:center; padding:60px; color:var(--sub); }
+    .hamburger { display:none; background:none; border:none; color:var(--texto); font-size:22px; cursor:pointer; }
+    @media(max-width:768px) {
+      .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); }
+      .main { margin-left:0; } .content { padding:16px; } .topbar { padding:14px 16px; }
+      .hamburger { display:block; } .form-grid { grid-template-columns:1fr; }
+      .search-box input { width:140px; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-circle">🏥</div>
+    <div><span>Medical System<br><small>Panel de control</small></span></div>
+  </div>
+  <nav>
+    <div class="nav-label">Principal</div>
+    <a class="nav-link" href="Dashboard.html"><span class="icon">📊</span> Dashboard</a>
+    <a class="nav-link" href="Pacientes.html"><span class="icon">👥</span> Pacientes</a>
+    <a class="nav-link" href="Citas.html"><span class="icon">📅</span> Citas</a>
+    <a class="nav-link active" href="Medicos.html"><span class="icon">👨‍⚕️</span> Médicos</a>
+    <div class="nav-label">Reportes</div>
+    <a class="nav-link" href="#"><span class="icon">📄</span> Exportar PDF</a>
+    <a class="nav-link" href="#"><span class="icon">📊</span> Exportar Excel</a>
+    <div class="nav-label">Sistema</div>
+    <a class="nav-link" href="#"><span class="icon">⚙️</span> Configuración</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="user-avatar">A</div>
+      <div class="user-info">
+        <strong id="user-nombre">Administrador</strong>
+        <span id="user-rol">admin</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-left">
+        <h1>Médicos</h1>
+        <p>Gestión del personal médico</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="cerrarSesion()" title="Cerrar sesión">🚪</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="toolbar">
+      <div class="search-box">
+        <span style="color:var(--sub)">🔍</span>
+        <input type="text" id="buscador" placeholder="Buscar médico o especialidad..." oninput="renderMedicos()">
+      </div>
+      <button class="btn-primary" onclick="abrirModal()">➕ Nuevo Médico</button>
+    </div>
+
+    <div class="medicos-grid" id="medicos-grid"></div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-titulo">Nuevo Médico</h2>
+    <p>Complete la información del médico</p>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Nombre completo *</label>
+        <input type="text" id="f-nombre" placeholder="Dr. Juan Pérez">
+      </div>
+      <div class="form-group full">
+        <label>Especialidad *</label>
+        <select id="f-esp">
+          <option value="">Seleccionar</option>
+          <option>Medicina General</option>
+          <option>Pediatría</option>
+          <option>Cardiología</option>
+          <option>Dermatología</option>
+          <option>Ginecología</option>
+          <option>Neurología</option>
+          <option>Ortopedia</option>
+          <option>Psiquiatría</option>
+          <option>Otra</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="tel" id="f-tel" placeholder="809-555-0000">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="f-email" placeholder="medico@clinica.com">
+      </div>
+      <div class="form-group">
+        <label>Hora inicio</label>
+        <input type="time" id="f-inicio" value="08:00">
+      </div>
+      <div class="form-group">
+        <label>Hora fin</label>
+        <input type="time" id="f-fin" value="17:00">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarMedico()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const COLORES_MED = ['#2563eb','#10b981','#f59e0b','#8b5cf6','#ef4444'];
+
+  let medicos = [
+    { id:1, nombre:'Dr. Juan Pérez',      especialidad:'Medicina General', telefono:'809-555-0001', email:'juan@clinica.com', inicio:'08:00', fin:'16:00', activo:true,  citas:48 },
+    { id:2, nombre:'Dra. María López',    especialidad:'Pediatría',        telefono:'809-555-0002', email:'maria@clinica.com',inicio:'09:00', fin:'17:00', activo:true,  citas:62 },
+    { id:3, nombre:'Dr. Carlos Sánchez',  especialidad:'Cardiología',      telefono:'809-555-0003', email:'carlos@clinica.com',inicio:'08:00', fin:'15:00', activo:true,  citas:35 },
+    { id:4, nombre:'Dra. Ana Rodríguez',  especialidad:'Dermatología',     telefono:'809-555-0004', email:'ana@clinica.com',   inicio:'10:00', fin:'18:00', activo:false, citas:20 },
+  ];
+
+  let editandoId = null;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    cargarUsuario();
+    renderMedicos();
+  });
+
+  function cargarUsuario() {
+    try {
+      const u = JSON.parse(localStorage.getItem('usuario') || '{}');
+      if (u.nombre) {
+        document.getElementById('user-nombre').textContent = u.nombre;
+        document.getElementById('user-rol').textContent    = u.rol;
+        document.getElementById('user-avatar').textContent = u.nombre.charAt(0).toUpperCase();
+      }
+    } catch(_) {}
+  }
+
+  function renderMedicos() {
+    const buscar = document.getElementById('buscador').value.toLowerCase();
+    const lista  = medicos.filter(m =>
+      `${m.nombre} ${m.especialidad}`.toLowerCase().includes(buscar)
+    );
+
+    const grid = document.getElementById('medicos-grid');
+    if (!lista.length) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><p style="font-size:15px">No se encontraron médicos.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = lista.map((m, i) => `
+      <div class="medico-card color-${i % 5}">
+        <div class="med-header">
+          <div class="med-avatar-lg" style="background:${COLORES_MED[i % 5]}">${m.nombre.charAt(4)}</div>
+          <div class="med-header-info">
+            <h3>${m.nombre}</h3>
+            <p>${m.especialidad}</p>
+            <span class="med-badge ${m.activo ? 'badge-activo' : 'badge-inactivo'}">${m.activo ? '● Activo' : '● Inactivo'}</span>
+          </div>
+        </div>
+        <div class="med-details">
+          <div class="med-detail"><span>📞</span> <span>${m.telefono || 'Sin teléfono'}</span></div>
+          <div class="med-detail"><span>✉️</span> <span>${m.email || 'Sin email'}</span></div>
+          <div class="med-detail"><span>📅</span> <span>Citas este mes: <strong>${m.citas}</strong></span></div>
+        </div>
+        <div class="med-horario">
+          <span>🕐 Horario</span>
+          <strong>${m.inicio} — ${m.fin}</strong>
+        </div>
+        <div class="med-footer">
+          <button class="btn-sm" onclick="editarMedico(${m.id})">✏️ Editar</button>
+          <button class="btn-sm" onclick="toggleActivo(${m.id})">${m.activo ? '⏸ Desactivar' : '▶ Activar'}</button>
+          <button class="btn-sm danger" onclick="eliminarMedico(${m.id})">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+
+  function abrirModal(m = null) {
+    editandoId = m ? m.id : null;
+    document.getElementById('modal-titulo').textContent = m ? 'Editar Médico' : 'Nuevo Médico';
+    document.getElementById('f-nombre').value = m?.nombre       || '';
+    document.getElementById('f-esp').value    = m?.especialidad || '';
+    document.getElementById('f-tel').value    = m?.telefono     || '';
+    document.getElementById('f-email').value  = m?.email        || '';
+    document.getElementById('f-inicio').value = m?.inicio       || '08:00';
+    document.getElementById('f-fin').value    = m?.fin          || '17:00';
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function cerrarModal() {
+    document.getElementById('modal').classList.remove('open');
+    editandoId = null;
+  }
+
+  function guardarMedico() {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    const esp    = document.getElementById('f-esp').value;
+    if (!nombre || !esp) { alert('Nombre y especialidad son obligatorios.'); return; }
+
+    const datos = {
+      nombre,
+      especialidad: esp,
+      telefono: document.getElementById('f-tel').value.trim(),
+      email:    document.getElementById('f-email').value.trim(),
+      inicio:   document.getElementById('f-inicio').value,
+      fin:      document.getElementById('f-fin').value,
+    };
+
+    if (editandoId) {
+      const idx = medicos.findIndex(m => m.id === editandoId);
+      medicos[idx] = { ...medicos[idx], ...datos };
+    } else {
+      medicos.push({ id: Date.now(), ...datos, activo: true, citas: 0 });
+    }
+
+    cerrarModal();
+    renderMedicos();
+  }
+
+  function editarMedico(id) {
+    abrirModal(medicos.find(m => m.id === id));
+  }
+
+  function toggleActivo(id) {
+    const m = medicos.find(m => m.id === id);
+    if (m) { m.activo = !m.activo; renderMedicos(); }
+  }
+
+  function eliminarMedico(id) {
+    if (confirm('¿Eliminar este médico?')) {
+      medicos = medicos.filter(m => m.id !== id);
+      renderMedicos();
+    }
+  }
+
+  function cerrarSesion() {
+    if (confirm('¿Cerrar sesión?')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      window.location.href = 'Login.html';
+    }
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+  });
+</script>
+</body>
+</html>
