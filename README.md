@@ -1,158 +1,103 @@
-# 🏥 Sistema de Gestión Médica — Clínica
+# 🏥 Sistema de Gestión Médica
 
-> Proyecto Final — Programación III · UAPA · Trimestre Mayo-Julio 2026
+Sistema web desarrollado para facilitar la administración de una clínica médica, permitiendo gestionar pacientes, médicos y citas de forma rápida y segura.
 
----
+## 📌 Características
 
-## 📋 Descripción del Sistema
+- Inicio de sesión con autenticación mediante JWT.
+- Gestión de pacientes.
+- Gestión de médicos.
+- Registro y administración de citas médicas.
+- Panel principal (Dashboard).
+- Conexión a base de datos SQL Server.
 
-Sistema web para la gestión integral de una clínica médica.  
-Permite administrar pacientes, médicos, citas y generar reportes en PDF y Excel.
+## 🛠 Tecnologías utilizadas
 
-## 🎯 Objetivo
+- Node.js
+- Express.js
+- SQL Server
+- HTML5
+- CSS3
+- JavaScript
+- JWT
+- bcryptjs
 
-Desarrollar una solución informática funcional que resuelva la gestión de citas e historial clínico de una clínica, aplicando principios de programación orientada a objetos, bases de datos relacionales, autenticación segura y buenas prácticas de desarrollo.
-
----
-
-## 🛠️ Tecnologías Utilizadas
-
-| Capa       | Tecnología           |
-|------------|----------------------|
-| Backend    | Node.js + Express    |
-| Base Datos | MySQL 8.x            |
-| Auth       | JWT + bcryptjs       |
-| Reportes   | pdfkit + ExcelJS     |
-| Frontend   | React.js + Axios     |
-| Control V. | Git + GitHub         |
-
----
-
-## 📁 Estructura del Proyecto
+## 📁 Estructura del proyecto
 
 ```
-clinica-sistema/
-├── backend/
-│   ├── config/
-│   │   ├── db.js           # Conexión SQL Server (2022)
-│   │   └── database.sql    # Esquema y datos iniciales
-│   ├── middleware/
-│   │   └── auth.js         # JWT verifyToken + requireRole
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── pacientesController.js
-│   │   ├── citasController.js
-│   │   └── reportesController.js
-│   ├── routes/
-│   │   ├── auth.js
-│   │   ├── pacientes.js
-│   │   ├── citas.js
-│   │   └── reportes.js
-│   ├── server.js           # Punto de entrada
-│   ├── package.json
-│   └── .env.example
-├── frontend/               # React (por implementar)
-├── .gitignore
+Sistema-Clinico/
+│── config/
+│── controllers/
+│── middleware/
+│── routes/
+│── public/
+│── views/
+│── server.js
+│── package.json
+│── .env
 └── README.md
 ```
 
----
-
-## ⚙️ Instalación y Ejecución
-
-### Prerequisitos
-- Node.js v18+
-- MySQL 8.x
-- npm o yarn
+## ⚙️ Instalación
 
 ### 1. Clonar el repositorio
+
 ```bash
-git clone https://github.com/tu-usuario/clinica-sistema.git
-cd clinica-sistema
+git clone https://github.com/tu-usuario/sistema-clinico.git
+cd sistema-clinico
 ```
 
-### 2. Configurar la base de datos
-```bash
-mysql -u root -p < backend/config/database.sql
-```
+### 2. Instalar las dependencias
 
-### 3. Configurar variables de entorno
-```bash
-cd backend
-cp .env.example .env
-# Editar .env con tus credenciales de MySQL
-```
-
-### 4. Instalar dependencias y arrancar
 ```bash
 npm install
-npm run dev     # desarrollo con nodemon
-# o
-npm start       # producción
 ```
 
-El servidor estará disponible en: `http://localhost:3000`
+### 3. Configurar la base de datos
 
----
+Crear una base de datos en **SQL Server** e importar el script SQL del proyecto.
 
-## 🔌 Endpoints de la API
+### 4. Configurar las variables de entorno
 
-### Autenticación
-| Método | Ruta              | Descripción           |
-|--------|-------------------|-----------------------|
-| POST   | /api/auth/login   | Iniciar sesión → JWT  |
-| POST   | /api/auth/registro| Crear usuario (admin) |
-| GET    | /api/auth/perfil  | Ver perfil actual     |
+Crear un archivo `.env` con la información de conexión a SQL Server.
 
-### Pacientes
-| Método | Ruta                  | Descripción           |
-|--------|-----------------------|-----------------------|
-| GET    | /api/pacientes        | Listar / buscar       |
-| GET    | /api/pacientes/:id    | Ver paciente + historial |
-| POST   | /api/pacientes        | Registrar paciente    |
-| PUT    | /api/pacientes/:id    | Actualizar            |
-| DELETE | /api/pacientes/:id    | Eliminar (admin)      |
+Ejemplo:
 
-### Citas
-| Método | Ruta                       | Descripción           |
-|--------|----------------------------|-----------------------|
-| GET    | /api/citas                 | Listar con filtros    |
-| POST   | /api/citas                 | Crear cita            |
-| PUT    | /api/citas/:id/estado      | Cambiar estado        |
-| POST   | /api/citas/:id/historial   | Registrar consulta    |
-
-### Reportes
-| Método | Ruta                          | Descripción           |
-|--------|-------------------------------|-----------------------|
-| GET    | /api/reportes/citas/pdf       | Descargar PDF         |
-| GET    | /api/reportes/citas/excel     | Descargar Excel       |
-| GET    | /api/reportes/estadisticas    | Dashboard de datos    |
-
----
-
-## 👥 Roles del equipo
-
-| Rol                | Responsabilidad                        |
-|--------------------|----------------------------------------|
-| Líder del Proyecto | Coordinación, GitHub, entregas         |
-| Programador Backend| Node.js, Express, MySQL, JWT           |
-| Programador Frontend| React, Axios, diseño de páginas       |
-| Diseñador UI/UX    | Wireframes, estilos, experiencia       |
-| Tester             | Pruebas funcionales, casos de error    |
-| Documentador       | README, documentación técnica, video   |
-
----
-
-## 👤 Credenciales de prueba
-
-```
-Email:    admin@clinica.com
-Password: password
-Rol:      admin
+```env
+DB_SERVER=localhost
+DB_DATABASE=SistemaClinico
+DB_USER=sa
+DB_PASSWORD=tu_contraseña
+PORT=3000
+JWT_SECRET=tu_clave_secreta
 ```
 
----
+### 5. Ejecutar el proyecto
+
+```bash
+npm start
+```
+
+O si utilizas nodemon:
+
+```bash
+npm run dev
+```
+
+El servidor iniciará en:
+
+```
+http://localhost:3000
+```
+
+## 📷 Módulos principales
+
+- 🔐 Autenticación de usuarios.
+- 👨‍⚕️ Gestión de médicos.
+- 🧑‍🤝‍🧑 Gestión de pacientes.
+- 📅 Administración de citas.
+- 📊 Dashboard.
 
 ## 📄 Licencia
 
-Proyecto académico — UAPA 2026
+Este proyecto fue desarrollado con fines académicos para la asignatura **Programación III** de la **UAPA**.
