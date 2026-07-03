@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Medical Login</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    body{
+      width:100%;
+      height:100vh;
+      overflow:hidden;
+      background:#0f172a;
+    }
+
+    .container{
+      width:100%;
+      height:100vh;
+      display:flex;
+    }
+
+    /* ========================= */
+    /* LEFT PANEL */
+    /* ========================= */
+
+    .left-panel{
+      width:35%;
+      min-width:360px;
+
+      background:
+      rgba(255,255,255,0.93);
+
+      backdrop-filter:blur(10px);
+
+      display:flex;
+      justify-content:center;
+      align-items:center;
+
+      padding:40px;
+
+      z-index:2;
+    }
+
+    .login-card{
+      width:100%;
+      max-width:340px;
+    }
+
+    .logo-area{
+      text-align:center;
+      margin-bottom:45px;
+    }
+
+    .logo-circle{
+      width:95px;
+      height:95px;
+
+      border-radius:50%;
+
+      background:#1d4ed8;
+
+      margin:auto;
+      margin-bottom:20px;
+
+      overflow:hidden;
+
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .logo-circle img{
+      width:70%;
+      object-fit:contain;
+    }
+
+    .logo-area h2{
+      color:#1e293b;
+      margin-bottom:10px;
+      font-size:30px;
+    }
+
+    .logo-area p{
+      color:#64748b;
+      font-size:15px;
+    }
+
+    /* ========================= */
+    /* FORM */
+    /* ========================= */
+
+    .login-form{
+      display:flex;
+      flex-direction:column;
+      gap:22px;
+    }
+
+    .input-group{
+      position:relative;
+    }
+
+    .input-group input{
+      width:100%;
+
+      padding:16px 20px;
+
+      border-radius:16px;
+
+      border:1px solid #dbe4f0;
+
+      outline:none;
+
+      font-size:15px;
+
+      transition:0.3s;
+
+      background:white;
+    }
+
+    .input-group input:focus{
+
+      border-color:#2563eb;
+
+      box-shadow:
+      0 0 0 4px rgba(37,99,235,0.10);
+
+    }
+
+    .input-group input.error {
+      border-color:#ef4444;
+      box-shadow:0 0 0 4px rgba(239,68,68,0.10);
+    }
+
+    .options{
+      display:flex;
+      align-items:center;
+
+      font-size:14px;
+      color:#64748b;
+    }
+
+    .login-btn{
+      width:100%;
+
+      padding:16px;
+
+      border:none;
+
+      border-radius:16px;
+
+      background:
+      linear-gradient(
+        135deg,
+        #2563eb,
+        #1d4ed8
+      );
+
+      color:white;
+
+      font-size:16px;
+      font-weight:bold;
+
+      cursor:pointer;
+
+      transition:0.3s;
+    }
+
+    .login-btn:hover{
+
+      transform:translateY(-2px);
+
+      box-shadow:
+      0 10px 25px rgba(37,99,235,0.30);
+
+    }
+
+    .login-btn:disabled {
+      opacity:0.7;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .footer{
+      margin-top:40px;
+
+      text-align:center;
+
+      color:#94a3b8;
+
+      font-size:13px;
+    }
+
+    /* ========================= */
+    /* MESSAGE BOX ERROR        */
+    /* ========================= */
+
+    .msg-box {
+      display:none;
+      align-items:center;
+      gap:12px;
+
+      background:#1e293b;
+      border:1px solid #334155;
+      border-left:4px solid #ef4444;
+      border-radius:14px;
+
+      padding:14px 18px;
+
+      animation:slideIn 0.3s ease;
+    }
+
+    .msg-box.show {
+      display:flex;
+    }
+
+    .msg-box.success {
+      border-left-color:#10b981;
+    }
+
+    .msg-icon {
+      font-size:20px;
+      flex-shrink:0;
+    }
+
+    .msg-text {
+      flex:1;
+    }
+
+    .msg-text strong {
+      display:block;
+      font-size:13px;
+      color:#f1f5f9;
+      margin-bottom:2px;
+    }
+
+    .msg-text span {
+      font-size:12px;
+      color:#94a3b8;
+    }
+
+    .msg-close {
+      background:none;
+      border:none;
+      color:#64748b;
+      font-size:16px;
+      cursor:pointer;
+      padding:2px 6px;
+      border-radius:6px;
+      transition:0.2s;
+    }
+
+    .msg-close:hover {
+      color:#f1f5f9;
+      background:#334155;
+    }
+
+    @keyframes slideIn {
+      from { opacity:0; transform:translateY(-8px); }
+      to   { opacity:1; transform:translateY(0);    }
+    }
+
+    /* ========================= */
+    /* RIGHT PANEL */
+    /* ========================= */
+
+    .right-panel{
+      flex:1;
+
+      position:relative;
+
+      overflow:hidden;
+
+      background-image:
+      url("./Images/FondoLogin.avif");
+
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
+
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .right-panel::before{
+      content:"";
+
+      position:absolute;
+      inset:0;
+
+      backdrop-filter:blur(8px);
+
+      background:
+      rgba(15,23,42,0.50);
+
+      z-index:1;
+    }
+
+    .welcome{
+      position:relative;
+
+      z-index:2;
+
+      max-width:600px;
+
+      color:white;
+
+      text-align:center;
+
+      padding:40px;
+    }
+
+    .welcome h1{
+      font-size:90px;
+      margin-bottom:20px;
+      font-weight:800;
+    }
+
+    .welcome p{
+      font-size:22px;
+      line-height:1.8;
+
+      color:
+      rgba(255,255,255,0.88);
+    }
+
+    /* ========================= */
+    /* RESPONSIVE */
+    /* ========================= */
+
+    @media(max-width:1000px){
+
+      .container{
+        flex-direction:column;
+      }
+
+      .left-panel{
+        width:100%;
+        min-height:55vh;
+      }
+
+      .right-panel{
+        min-height:45vh;
+      }
+
+      .welcome h1{
+        font-size:60px;
+      }
+
+      .welcome p{
+        font-size:18px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- LEFT PANEL -->
+
+    <div class="left-panel">
+
+      <div class="login-card">
+
+        <!-- LOGO -->
+
+        <div class="logo-area">
+
+          <div class="logo-circle">
+
+            <img
+              src="./Images/ImagenLogin.jpeg"
+              alt="Logo"
+            >
+
+          </div>
+
+          <h2>Medical System</h2>
+
+          <p>
+            Gestión médica profesional
+          </p>
+
+        </div>
+
+        <!-- MESSAGE BOX -->
+        <div class="msg-box" id="msgBox">
+          <span class="msg-icon" id="msgIcon">❌</span>
+          <div class="msg-text">
+            <strong id="msgTitle">Error</strong>
+            <span id="msgDesc">Usuario o contraseña incorrectos.</span>
+          </div>
+          <button class="msg-close" onclick="cerrarMsg()">✕</button>
+        </div>
+
+        <!-- FORM -->
+
+        <form
+          class="login-form"
+          id="loginForm"
+          style="margin-top:16px"
+        >
+
+          <div class="input-group">
+
+            <input
+              type="email"
+              id="email"
+              placeholder="Correo electrónico"
+              required
+            >
+
+          </div>
+
+          <div class="input-group">
+
+            <input
+              type="password"
+              id="password"
+              placeholder="Contraseña"
+              required
+            >
+
+          </div>
+
+          <div class="options">
+
+            <label>
+              <input type="checkbox">
+              Remember me
+            </label>
+
+          </div>
+
+          <button
+            type="submit"
+            class="login-btn"
+            id="loginBtn"
+          >
+            Iniciar Sesión
+          </button>
+
+        </form>
+
+        <div class="footer">
+          © 2026 Medical System
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+
+    <div class="right-panel">
+
+      <div class="welcome">
+
+        <h1>Bienvenido.</h1>
+
+        <p>
+          Administra pacientes, citas y reportes
+          desde un sistema moderno, rápido y seguro.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    const loginForm = document.getElementById("loginForm");
+    const loginBtn  = document.getElementById("loginBtn");
+    const emailInput    = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    // Mostrar mensaje de error o éxito
+    function mostrarMsg(tipo, titulo, desc) {
+      const box   = document.getElementById("msgBox");
+      const icon  = document.getElementById("msgIcon");
+      const title = document.getElementById("msgTitle");
+      const descEl= document.getElementById("msgDesc");
+
+      icon.textContent  = tipo === "error" ? "❌" : "✅";
+      title.textContent = titulo;
+      descEl.textContent= desc;
+
+      box.classList.remove("show", "success");
+      box.classList.add("show");
+      if (tipo === "success") box.classList.add("success");
+    }
+
+    function cerrarMsg() {
+      document.getElementById("msgBox").classList.remove("show");
+    }
+
+    // Limpiar errores visuales al escribir
+    emailInput.addEventListener("input", () => {
+      emailInput.classList.remove("error");
+      cerrarMsg();
+    });
+
+    passwordInput.addEventListener("input", () => {
+      passwordInput.classList.remove("error");
+      cerrarMsg();
+    });
+
+    loginForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const email    = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      // Deshabilitar botón mientras carga
+      loginBtn.textContent = "Iniciando sesión...";
+      loginBtn.disabled    = true;
+      cerrarMsg();
+
+      try {
+        const response = await fetch("http://localhost:3000/api/auth/login", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+          // Guardar token y datos del usuario
+          localStorage.setItem("token",   data.token);
+          localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+          // Mostrar mensaje de éxito antes de redirigir
+          mostrarMsg("success", "Acceso concedido", "Redirigiendo al sistema...");
+
+          setTimeout(() => {
+            window.location.href = "Dashboard.html";
+          }, 800);
+
+        } else {
+          // Marcar campos en rojo
+          emailInput.classList.add("error");
+          passwordInput.classList.add("error");
+
+          mostrarMsg("error", "Acceso denegado", data.mensaje || "Usuario o contraseña incorrectos.");
+
+          loginBtn.textContent = "Iniciar Sesión";
+          loginBtn.disabled    = false;
+        }
+
+      } catch (err) {
+        mostrarMsg("error", "Error de conexión", "No se pudo conectar con el servidor. Verifica que el backend esté corriendo.");
+        loginBtn.textContent = "Iniciar Sesión";
+        loginBtn.disabled    = false;
+      }
+    });
+
+  </script>
+
+</body>
+</html>

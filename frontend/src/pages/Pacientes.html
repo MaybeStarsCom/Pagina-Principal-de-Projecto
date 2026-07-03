@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pacientes — Medical System</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; font-family:Arial,Helvetica,sans-serif; }
+    :root {
+      --azul:#2563eb; --azul-dark:#1d4ed8; --azul-light:rgba(37,99,235,0.10);
+      --fondo:#0f172a; --panel:#1e293b; --panel2:#273549; --borde:#334155;
+      --texto:#f1f5f9; --sub:#94a3b8; --verde:#10b981; --amarillo:#f59e0b; --rojo:#ef4444;
+    }
+    body { background:var(--fondo); color:var(--texto); min-height:100vh; display:flex; }
+
+    /* SIDEBAR */
+    .sidebar { width:240px; min-height:100vh; background:var(--panel); border-right:1px solid var(--borde); display:flex; flex-direction:column; position:fixed; top:0; left:0; z-index:100; }
+    .sidebar-logo { display:flex; align-items:center; gap:12px; padding:28px 24px 24px; border-bottom:1px solid var(--borde); }
+    .logo-circle { width:42px; height:42px; border-radius:50%; background:var(--azul); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .sidebar-logo span { font-size:16px; font-weight:700; }
+    .sidebar-logo small { font-size:11px; color:var(--sub); font-weight:400; }
+    nav { flex:1; padding:20px 12px; display:flex; flex-direction:column; gap:4px; }
+    .nav-label { font-size:10px; color:var(--sub); letter-spacing:.1em; text-transform:uppercase; padding:16px 12px 6px; }
+    .nav-link { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px; color:var(--sub); text-decoration:none; font-size:14px; font-weight:500; transition:.2s; cursor:pointer; border:none; background:none; width:100%; text-align:left; }
+    .nav-link:hover { background:var(--panel2); color:var(--texto); }
+    .nav-link.active { background:var(--azul-light); color:var(--azul); border:1px solid rgba(37,99,235,0.25); }
+    .nav-link .icon { font-size:18px; width:22px; text-align:center; }
+    .badge { margin-left:auto; background:var(--azul); color:white; font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; }
+    .sidebar-footer { padding:16px 12px; border-top:1px solid var(--borde); }
+    .user-card { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:var(--panel2); }
+    .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--azul),var(--azul-dark)); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; }
+    .user-info { flex:1; overflow:hidden; }
+    .user-info strong { font-size:13px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .user-info span { font-size:11px; color:var(--sub); }
+
+    /* MAIN */
+    .main { margin-left:240px; flex:1; display:flex; flex-direction:column; }
+    .topbar { background:var(--panel); border-bottom:1px solid var(--borde); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px; position:sticky; top:0; z-index:50; }
+    .topbar-left h1 { font-size:20px; font-weight:700; }
+    .topbar-left p { font-size:13px; color:var(--sub); margin-top:2px; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .search-box { display:flex; align-items:center; background:var(--panel2); border:1px solid var(--borde); border-radius:12px; padding:8px 14px; gap:8px; }
+    .search-box input { background:none; border:none; outline:none; color:var(--texto); font-size:14px; width:200px; }
+    .search-box input::placeholder { color:var(--sub); }
+    .icon-btn { width:38px; height:38px; border-radius:10px; background:var(--panel2); border:1px solid var(--borde); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; color:var(--sub); transition:.2s; }
+    .icon-btn:hover { background:var(--borde); color:var(--texto); }
+    .content { padding:32px; flex:1; }
+
+    /* TOOLBAR */
+    .toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; gap:12px; flex-wrap:wrap; }
+    .toolbar-left { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn-primary { padding:10px 20px; background:linear-gradient(135deg,var(--azul),var(--azul-dark)); color:white; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; transition:.2s; display:flex; align-items:center; gap:8px; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(37,99,235,.35); }
+    .btn-secondary { padding:10px 16px; background:var(--panel2); color:var(--sub); border:1px solid var(--borde); border-radius:12px; font-size:13px; cursor:pointer; transition:.2s; }
+    .btn-secondary:hover { color:var(--texto); border-color:var(--azul); }
+    .filter-select { padding:9px 14px; background:var(--panel2); color:var(--texto); border:1px solid var(--borde); border-radius:12px; font-size:13px; cursor:pointer; outline:none; }
+
+    /* TABLA */
+    .card { background:var(--panel); border:1px solid var(--borde); border-radius:16px; overflow:hidden; }
+    .card-header { padding:18px 24px; border-bottom:1px solid var(--borde); display:flex; align-items:center; justify-content:space-between; }
+    .card-header h3 { font-size:15px; font-weight:700; }
+    .card-header span { font-size:13px; color:var(--sub); }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; font-size:11px; color:var(--sub); text-transform:uppercase; letter-spacing:.06em; padding:14px 24px; border-bottom:1px solid var(--borde); background:var(--panel2); white-space:nowrap; }
+    td { padding:14px 24px; font-size:13px; border-bottom:1px solid var(--borde); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,0.02); }
+    .pac-name { display:flex; align-items:center; gap:12px; }
+    .pac-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; }
+    .pac-info strong { font-size:13px; display:block; }
+    .pac-info span { font-size:11px; color:var(--sub); }
+    .badge-estado { font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; }
+    .est-activo { background:rgba(16,185,129,.15); color:var(--verde); }
+    .est-inactivo { background:rgba(239,68,68,.15); color:var(--rojo); }
+    .actions { display:flex; gap:6px; }
+    .btn-icon { width:32px; height:32px; border-radius:8px; border:1px solid var(--borde); background:var(--panel2); color:var(--sub); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s; }
+    .btn-icon:hover { color:var(--texto); border-color:var(--azul); }
+    .btn-icon.danger:hover { color:var(--rojo); border-color:var(--rojo); }
+
+    /* PAGINACIÓN */
+    .pagination { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-top:1px solid var(--borde); }
+    .pagination span { font-size:13px; color:var(--sub); }
+    .pag-btns { display:flex; gap:6px; }
+    .pag-btn { width:34px; height:34px; border-radius:8px; border:1px solid var(--borde); background:var(--panel2); color:var(--sub); font-size:13px; cursor:pointer; transition:.2s; }
+    .pag-btn:hover, .pag-btn.active { background:var(--azul); color:white; border-color:var(--azul); }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:var(--panel); border:1px solid var(--borde); border-radius:20px; padding:32px; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; }
+    .modal h2 { font-size:18px; font-weight:700; margin-bottom:6px; }
+    .modal p { font-size:13px; color:var(--sub); margin-bottom:24px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-group.full { grid-column:1/-1; }
+    .form-group label { font-size:12px; color:var(--sub); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding:11px 14px; background:var(--panel2); border:1px solid var(--borde);
+      border-radius:12px; color:var(--texto); font-size:14px; outline:none; transition:.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+    .form-group select option { background:var(--panel2); }
+    .form-group textarea { resize:vertical; min-height:80px; }
+    .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+    .btn-cancel { padding:10px 20px; background:var(--panel2); color:var(--sub); border:1px solid var(--borde); border-radius:12px; font-size:13px; cursor:pointer; }
+    .btn-cancel:hover { color:var(--texto); }
+
+    /* HAMBURGUER */
+    .hamburger { display:none; background:none; border:none; color:var(--texto); font-size:22px; cursor:pointer; }
+
+    @media(max-width:768px) {
+      .sidebar { transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .main { margin-left:0; }
+      .content { padding:20px 16px; }
+      .topbar { padding:14px 16px; }
+      .hamburger { display:block; }
+      .search-box { display:none; }
+      .form-grid { grid-template-columns:1fr; }
+      th:nth-child(3), td:nth-child(3),
+      th:nth-child(4), td:nth-child(4) { display:none; }
+    }
+
+    .loading {
+  text-align:center;
+  padding:40px;
+  color:var(--sub);
+  font-size:14px;
+}
+
+.spinner {
+  display:inline-block;
+  width:20px;
+  height:20px;
+  border:2px solid var(--borde);
+  border-top-color:var(--azul);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  margin-right:8px;
+  vertical-align:middle;
+}
+
+@keyframes spin {
+  to { transform:rotate(360deg); }
+}
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-circle">🏥</div>
+    <div><span>Medical System<br><small>Panel de control</small></span></div>
+  </div>
+  <nav>
+    <div class="nav-label">Principal</div>
+    <a class="nav-link" href="Dashboard.html"><span class="icon">📊</span> Dashboard</a>
+    <a class="nav-link active" href="Pacientes.html"><span class="icon">👥</span> Pacientes <span class="badge" id="badge-pac">0</span></a>
+    <a class="nav-link" href="Citas.html"><span class="icon">📅</span> Citas</a>
+    <a class="nav-link" href="Medicos.html"><span class="icon">👨‍⚕️</span> Médicos</a>
+    <div class="nav-label">Reportes</div>
+    <a class="nav-link" href="#" onclick="descargarReporte('pdf')"><span class="icon">📄</span> Exportar PDF</a>
+    <a class="nav-link" href="#" onclick="descargarReporte('excel')"><span class="icon">📊</span> Exportar Excel</a>
+    <div class="nav-label">Sistema</div>
+    <a class="nav-link" href="#"><span class="icon">⚙️</span> Configuración</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="user-avatar">A</div>
+      <div class="user-info">
+        <strong id="user-nombre">Administrador</strong>
+        <span id="user-rol">admin</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-left">
+        <h1>Pacientes</h1>
+        <p>Gestión de expedientes médicos</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-box">
+        <span style="color:var(--sub)">🔍</span>
+        <input type="text" id="buscador" placeholder="Buscar por nombre o cédula..." oninput="filtrarPacientes()">
+      </div>
+      <button class="icon-btn" onclick="cerrarSesion()" title="Cerrar sesión">🚪</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="btn-primary" onclick="abrirModal()">➕ Nuevo Paciente</button>
+        <select class="filter-select" onchange="filtrarPacientes()">
+          <option value="">Todos los estados</option>
+          <option value="activo">Activos</option>
+          <option value="inactivo">Inactivos</option>
+        </select>
+      </div>
+      <div style="font-size:13px;color:var(--sub)">
+        Mostrando <strong id="conteo" style="color:var(--texto)">0</strong> pacientes
+      </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Lista de Pacientes</h3>
+        <span id="fecha-hoy"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>Cédula</th>
+              <th>Teléfono</th>
+              <th>Sangre</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span id="pag-info">Página 1 de 1</span>
+        <div class="pag-btns" id="pag-btns"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL NUEVO / EDITAR PACIENTE -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-titulo">Nuevo Paciente</h2>
+    <p id="modal-sub">Complete los datos del expediente médico</p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Nombre *</label>
+        <input type="text" id="f-nombre" placeholder="Juan">
+      </div>
+      <div class="form-group">
+        <label>Apellido *</label>
+        <input type="text" id="f-apellido" placeholder="Pérez">
+      </div>
+      <div class="form-group">
+        <label>Cédula</label>
+        <input type="text" id="f-cedula" placeholder="001-1234567-8">
+      </div>
+      <div class="form-group">
+        <label>Fecha de Nacimiento</label>
+        <input type="date" id="f-fecha">
+      </div>
+      <div class="form-group">
+        <label>Sexo</label>
+        <select id="f-sexo">
+          <option value="">Seleccionar</option>
+          <option value="M">Masculino</option>
+          <option value="F">Femenino</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tipo de Sangre</label>
+        <select id="f-sangre">
+          <option value="">Desconocido</option>
+          <option>A+</option><option>A-</option>
+          <option>B+</option><option>B-</option>
+          <option>O+</option><option>O-</option>
+          <option>AB+</option><option>AB-</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="tel" id="f-telefono" placeholder="809-555-0000">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="f-email" placeholder="correo@ejemplo.com">
+      </div>
+      <div class="form-group full">
+        <label>Dirección</label>
+        <input type="text" id="f-direccion" placeholder="Calle, sector, ciudad">
+      </div>
+      <div class="form-group full">
+        <label>Alergias conocidas</label>
+        <textarea id="f-alergias" placeholder="Penicilina, polvo, etc. (opcional)"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarPaciente()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── INIT ────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    cargarUsuario();
+    document.getElementById('fecha-hoy').textContent = new Date().toLocaleDateString('es-DO', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    renderTabla();
+  });
+
+  function cargarUsuario() {
+    try {
+      const u = JSON.parse(localStorage.getItem('usuario') || '{}');
+      if (u.nombre) {
+        document.getElementById('user-nombre').textContent = u.nombre;
+        document.getElementById('user-rol').textContent    = u.rol || 'usuario';
+        document.getElementById('user-avatar').textContent = u.nombre.charAt(0).toUpperCase();
+      }
+    } catch(_) {}
+  }
+
+  // ── RENDER TABLA ────────────────────────────
+  function filtrarPacientes() {
+    paginaActual = 1;
+    renderTabla();
+  }
+
+  function renderTabla() {
+    const buscar = document.getElementById('buscador').value.toLowerCase();
+    const filtro = document.querySelector('.filter-select')?.value || '';
+
+    let lista = pacientes.filter(p => {
+      const texto = `${p.nombre} ${p.apellido} ${p.cedula}`.toLowerCase();
+      const estadoOk = !filtro || p.estado === filtro;
+      return texto.includes(buscar) && estadoOk;
+    });
+
+    document.getElementById('conteo').textContent = lista.length;
+    document.getElementById('badge-pac').textContent = pacientes.length;
+
+    const total = Math.ceil(lista.length / POR_PAGINA) || 1;
+    if (paginaActual > total) paginaActual = total;
+
+    const inicio = (paginaActual - 1) * POR_PAGINA;
+    const pagina = lista.slice(inicio, inicio + POR_PAGINA);
+
+    const tbody = document.getElementById('tabla-body');
+    if (!pagina.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:32px">No se encontraron pacientes.</td></tr>`;
+    } else {
+      tbody.innerHTML = pagina.map(p => `
+        <tr>
+          <td>
+            <div class="pac-name">
+              <div class="pac-avatar" style="background:${p.color}">${p.nombre.charAt(0)}</div>
+              <div class="pac-info">
+                <strong>${p.nombre} ${p.apellido}</strong>
+                <span>${p.email || 'Sin email'}</span>
+              </div>
+            </div>
+          </td>
+          <td style="color:var(--sub)">${p.cedula || '—'}</td>
+          <td>${p.telefono || '—'}</td>
+          <td><span style="font-weight:700;color:var(--azul)">${p.sangre || '—'}</span></td>
+          <td><span class="badge-estado ${p.estado === 'activo' ? 'est-activo' : 'est-inactivo'}">${p.estado === 'activo' ? 'Activo' : 'Inactivo'}</span></td>
+          <td>
+            <div class="actions">
+              <button class="btn-icon" title="Editar" onclick="editarPaciente(${p.id})">✏️</button>
+              <button class="btn-icon danger" title="Eliminar" onclick="eliminarPaciente(${p.id})">🗑️</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+
+    // Paginación
+    document.getElementById('pag-info').textContent = `Página ${paginaActual} de ${total}`;
+    const btns = document.getElementById('pag-btns');
+    btns.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+      const b = document.createElement('button');
+      b.className = 'pag-btn' + (i === paginaActual ? ' active' : '');
+      b.textContent = i;
+      b.onclick = () => { paginaActual = i; renderTabla(); };
+      btns.appendChild(b);
+    }
+  }
+
+  // ── MODAL ───────────────────────────────────
+  function abrirModal(p = null) {
+    editandoId = p ? p.id : null;
+    document.getElementById('modal-titulo').textContent = p ? 'Editar Paciente' : 'Nuevo Paciente';
+    document.getElementById('modal-sub').textContent    = p ? 'Modifica los datos del expediente' : 'Complete los datos del expediente médico';
+    document.getElementById('f-nombre').value    = p?.nombre    || '';
+    document.getElementById('f-apellido').value  = p?.apellido  || '';
+    document.getElementById('f-cedula').value    = p?.cedula    || '';
+    document.getElementById('f-fecha').value     = p?.fecha_nac || '';
+    document.getElementById('f-sexo').value      = p?.sexo      || '';
+    document.getElementById('f-sangre').value    = p?.sangre    || '';
+    document.getElementById('f-telefono').value  = p?.telefono  || '';
+    document.getElementById('f-email').value     = p?.email     || '';
+    document.getElementById('f-direccion').value = p?.direccion || '';
+    document.getElementById('f-alergias').value  = p?.alergias  || '';
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function cerrarModal() {
+    document.getElementById('modal').classList.remove('open');
+    editandoId = null;
+  }
+
+  function guardarPaciente() {
+    const nombre   = document.getElementById('f-nombre').value.trim();
+    const apellido = document.getElementById('f-apellido').value.trim();
+    if (!nombre || !apellido) { alert('Nombre y apellido son obligatorios.'); return; }
+
+    const datos = {
+      nombre, apellido,
+      cedula:    document.getElementById('f-cedula').value.trim(),
+      fecha_nac: document.getElementById('f-fecha').value,
+      sexo:      document.getElementById('f-sexo').value,
+      sangre:    document.getElementById('f-sangre').value,
+      telefono:  document.getElementById('f-telefono').value.trim(),
+      email:     document.getElementById('f-email').value.trim(),
+      direccion: document.getElementById('f-direccion').value.trim(),
+      alergias:  document.getElementById('f-alergias').value.trim(),
+    };
+
+    if (editandoId) {
+      const idx = pacientes.findIndex(p => p.id === editandoId);
+      pacientes[idx] = { ...pacientes[idx], ...datos };
+    } else {
+      datos.id     = Date.now();
+      datos.estado = 'activo';
+      datos.color  = COLORES[pacientes.length % COLORES.length];
+      pacientes.push(datos);
+    }
+
+    cerrarModal();
+    renderTabla();
+  }
+
+  function editarPaciente(id) {
+    abrirModal(pacientes.find(p => p.id === id));
+  }
+
+  function eliminarPaciente(id) {
+    if (confirm('¿Eliminar este paciente? Esta acción no se puede deshacer.')) {
+      pacientes = pacientes.filter(p => p.id !== id);
+      renderTabla();
+    }
+  }
+
+  // ── UTILS ───────────────────────────────────
+  function cerrarSesion() {
+    if (confirm('¿Cerrar sesión?')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      window.location.href = 'Login.html';
+    }
+  }
+
+  function descargarReporte(tipo) {
+    alert(`Reporte ${tipo.toUpperCase()} se generará desde el backend.\nConéctate a la API para usarlo.`);
+  }
+
+  // Cerrar modal al hacer clic fuera
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+  });
+
+ // ── CONFIGURACIÓN ───────────────────────────────
+const API = 'http://localhost:3000/api';
+
+function getToken() {
+  return localStorage.getItem('token');
+}
+
+function headers() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${getToken()}`
+  };
+}
+
+// ── VARIABLES GLOBALES ───────────────────────────
+const COLORES = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'];
+let paginaActual = 1;
+let totalPaginas = 1;
+let editandoId   = null;
+
+// ── INIT ────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  cargarUsuario();
+  document.getElementById('fecha-hoy').textContent =
+    new Date().toLocaleDateString('es-DO', {
+      weekday:'long', year:'numeric', month:'long', day:'numeric'
+    });
+  cargarPacientes();
+});
+
+function cargarUsuario() {
+  try {
+    const u = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (u.nombre) {
+      document.getElementById('user-nombre').textContent = u.nombre;
+      document.getElementById('user-rol').textContent    = u.rol;
+      document.getElementById('user-avatar').textContent = u.nombre.charAt(0).toUpperCase();
+    }
+  } catch(_) {}
+}
+
+// ── CARGAR PACIENTES DESDE LA API ───────────────
+async function cargarPacientes(pagina = 1) {
+  const buscar = document.getElementById('buscador').value;
+  const tbody  = document.getElementById('tabla-body');
+
+  tbody.innerHTML = `<tr><td colspan="6" class="loading"><span class="spinner"></span>Cargando pacientes...</td></tr>`;
+
+  try {
+    const res  = await fetch(
+      `${API}/pacientes?buscar=${encodeURIComponent(buscar)}&pagina=${pagina}&limite=10`,
+      { headers: headers() }
+    );
+    const data = await res.json();
+
+    if (!data.ok) {
+      if (res.status === 403) {
+        window.location.href = 'Login.html';
+        return;
+      }
+      throw new Error(data.mensaje);
+    }
+
+    paginaActual = data.pagina;
+    totalPaginas = data.paginas;
+
+    document.getElementById('conteo').textContent     = data.total;
+    document.getElementById('badge-pac').textContent  = data.total;
+
+    renderTabla(data.datos);
+    renderPaginacion();
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--rojo);padding:32px">
+      ❌ Error al cargar pacientes: ${err.message}
+    </td></tr>`;
+  }
+}
+
+// ── RENDER TABLA ────────────────────────────────
+function renderTabla(pacientes) {
+  const tbody = document.getElementById('tabla-body');
+
+  if (!pacientes.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:32px">No se encontraron pacientes.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = pacientes.map((p, i) => {
+    const color = COLORES[i % COLORES.length];
+    const inicial = p.nombre.charAt(0).toUpperCase();
+    return `
+      <tr>
+        <td>
+          <div class="pac-name">
+            <div class="pac-avatar" style="background:${color}">${inicial}</div>
+            <div class="pac-info">
+              <strong>${p.nombre} ${p.apellido}</strong>
+              <span>${p.email || 'Sin email'}</span>
+            </div>
+          </div>
+        </td>
+        <td style="color:var(--sub)">${p.cedula || '—'}</td>
+        <td>${p.telefono || '—'}</td>
+        <td><span style="font-weight:700;color:var(--azul)">${p.sangre || '—'}</span></td>
+        <td><span class="badge-estado est-activo">Activo</span></td>
+        <td>
+          <div class="actions">
+            <button class="btn-icon" title="Editar" onclick="editarPaciente(${p.id})">✏️</button>
+            <button class="btn-icon danger" title="Eliminar" onclick="eliminarPaciente(${p.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// ── PAGINACIÓN ──────────────────────────────────
+function renderPaginacion() {
+  document.getElementById('pag-info').textContent = `Página ${paginaActual} de ${totalPaginas}`;
+  const btns = document.getElementById('pag-btns');
+  btns.innerHTML = '';
+
+  for (let i = 1; i <= totalPaginas; i++) {
+    const b = document.createElement('button');
+    b.className  = 'pag-btn' + (i === paginaActual ? ' active' : '');
+    b.textContent = i;
+    b.onclick = () => cargarPacientes(i);
+    btns.appendChild(b);
+  }
+}
+
+// ── BÚSQUEDA ────────────────────────────────────
+function filtrarPacientes() {
+  paginaActual = 1;
+  cargarPacientes(1);
+}
+
+// ── MODAL ───────────────────────────────────────
+function abrirModal(p = null) {
+  editandoId = p ? p.id : null;
+  document.getElementById('modal-titulo').textContent = p ? 'Editar Paciente' : 'Nuevo Paciente';
+  document.getElementById('modal-sub').textContent    = p ? 'Modifica los datos del expediente' : 'Complete los datos del expediente médico';
+  document.getElementById('f-nombre').value    = p?.nombre    || '';
+  document.getElementById('f-apellido').value  = p?.apellido  || '';
+  document.getElementById('f-cedula').value    = p?.cedula    || '';
+  document.getElementById('f-fecha').value     = p?.fecha_nac || '';
+  document.getElementById('f-sexo').value      = p?.sexo      || '';
+  document.getElementById('f-sangre').value    = p?.sangre    || '';
+  document.getElementById('f-telefono').value  = p?.telefono  || '';
+  document.getElementById('f-email').value     = p?.email     || '';
+  document.getElementById('f-direccion').value = p?.direccion || '';
+  document.getElementById('f-alergias').value  = p?.alergias  || '';
+  document.getElementById('modal').classList.add('open');
+}
+
+function cerrarModal() {
+  document.getElementById('modal').classList.remove('open');
+  editandoId = null;
+}
+
+// ── GUARDAR PACIENTE (crear o editar) ───────────
+async function guardarPaciente() {
+  const nombre   = document.getElementById('f-nombre').value.trim();
+  const apellido = document.getElementById('f-apellido').value.trim();
+
+  if (!nombre || !apellido) {
+    alert('Nombre y apellido son obligatorios.');
+    return;
+  }
+
+  const datos = {
+    nombre,
+    apellido,
+    cedula:    document.getElementById('f-cedula').value.trim()    || null,
+    fecha_nac: document.getElementById('f-fecha').value            || null,
+    sexo:      document.getElementById('f-sexo').value             || null,
+    sangre:    document.getElementById('f-sangre').value           || null,
+    telefono:  document.getElementById('f-telefono').value.trim()  || null,
+    email:     document.getElementById('f-email').value.trim()     || null,
+    direccion: document.getElementById('f-direccion').value.trim() || null,
+    alergias:  document.getElementById('f-alergias').value.trim()  || null,
+  };
+
+  try {
+    const url    = editandoId ? `${API}/pacientes/${editandoId}` : `${API}/pacientes`;
+    const method = editandoId ? 'PUT' : 'POST';
+
+    const res  = await fetch(url, {
+      method,
+      headers: headers(),
+      body: JSON.stringify(datos)
+    });
+    const data = await res.json();
+
+    if (!data.ok) throw new Error(data.mensaje);
+
+    cerrarModal();
+    cargarPacientes(paginaActual);
+
+  } catch (err) {
+    alert('❌ Error: ' + err.message);
+  }
+}
+
+// ── EDITAR ──────────────────────────────────────
+async function editarPaciente(id) {
+  try {
+    const res  = await fetch(`${API}/pacientes/${id}`, { headers: headers() });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.mensaje);
+    abrirModal(data.paciente);
+  } catch (err) {
+    alert('❌ Error al cargar paciente: ' + err.message);
+  }
+}
+
+// ── ELIMINAR ────────────────────────────────────
+async function eliminarPaciente(id) {
+  if (!confirm('¿Eliminar este paciente? Esta acción no se puede deshacer.')) return;
+
+  try {
+    const res  = await fetch(`${API}/pacientes/${id}`, {
+      method: 'DELETE',
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.mensaje);
+    cargarPacientes(paginaActual);
+  } catch (err) {
+    alert('❌ Error: ' + err.message);
+  }
+}
+
+// ── CERRAR SESIÓN ────────────────────────────────
+function cerrarSesion() {
+  if (confirm('¿Cerrar sesión?')) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    window.location.href = 'Login.html';
+  }
+}
+
+function descargarReporte(tipo) {
+  alert(`Reporte ${tipo.toUpperCase()} próximamente.`);
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+}); 
+</script>
+</body>
+</html>
