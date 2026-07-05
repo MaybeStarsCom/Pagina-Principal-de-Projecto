@@ -100,7 +100,7 @@ async function crear(req, res) {
     const conflicto = await pool.request()
       .input("medico", sql.Int, medico_id)
       .input("fecha", sql.Date, fecha)
-      .input("hora", sql.Time, hora)
+      .input("hora", sql.VarChar, hora + ':00')
       .query(`
         SELECT id
         FROM citas
@@ -122,7 +122,7 @@ async function crear(req, res) {
       .input("paciente", sql.Int, paciente_id)
       .input("medico", sql.Int, medico_id)
       .input("fecha", sql.Date, fecha)
-      .input("hora", sql.Time, hora)
+      .input("hora", sql.VarChar, hora + ':00')
       .input("motivo", sql.NVarChar, motivo || null)
       .input("usuario", sql.Int, req.user.id)
 
