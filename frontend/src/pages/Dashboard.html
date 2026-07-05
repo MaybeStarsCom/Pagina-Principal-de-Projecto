@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Medical System</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+    :root {
+      --azul:#2563eb; --azul-dark:#1d4ed8; --azul-light:rgba(37,99,235,0.10);
+      --fondo:#0f172a; --panel:#1e293b; --panel2:#273549; --borde:#334155;
+      --texto:#f1f5f9; --sub:#94a3b8; --verde:#10b981; --amarillo:#f59e0b; --rojo:#ef4444;
+    }
+    body { background:var(--fondo); color:var(--texto); min-height:100vh; display:flex; }
+
+    .sidebar { width:240px; min-height:100vh; background:var(--panel); border-right:1px solid var(--borde); display:flex; flex-direction:column; position:fixed; top:0; left:0; z-index:100; transition:transform 0.3s; }
+    .sidebar-logo { display:flex; align-items:center; gap:12px; padding:28px 24px 24px; border-bottom:1px solid var(--borde); }
+    .logo-circle { width:42px; height:42px; border-radius:50%; background:var(--azul); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .sidebar-logo span { font-size:16px; font-weight:700; color:var(--texto); line-height:1.2; }
+    .sidebar-logo small { font-size:11px; color:var(--sub); font-weight:400; }
+    nav { flex:1; padding:20px 12px; display:flex; flex-direction:column; gap:4px; }
+    .nav-label { font-size:10px; color:var(--sub); letter-spacing:0.1em; text-transform:uppercase; padding:16px 12px 6px; }
+    .nav-link { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px; color:var(--sub); text-decoration:none; font-size:14px; font-weight:500; transition:0.2s; cursor:pointer; border:none; background:none; width:100%; text-align:left; }
+    .nav-link:hover { background:var(--panel2); color:var(--texto); }
+    .nav-link.active { background:var(--azul-light); color:var(--azul); border:1px solid rgba(37,99,235,0.25); }
+    .nav-link .icon { font-size:18px; width:22px; text-align:center; }
+    .badge { margin-left:auto; background:var(--azul); color:white; font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; }
+    .sidebar-footer { padding:16px 12px; border-top:1px solid var(--borde); }
+    .user-card { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:var(--panel2); }
+    .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--azul),var(--azul-dark)); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; }
+    .user-info { flex:1; overflow:hidden; }
+    .user-info strong { font-size:13px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .user-info span { font-size:11px; color:var(--sub); }
+
+    .main { margin-left:240px; flex:1; display:flex; flex-direction:column; min-height:100vh; }
+    .topbar { background:var(--panel); border-bottom:1px solid var(--borde); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px; position:sticky; top:0; z-index:50; }
+    .topbar-left h1 { font-size:20px; font-weight:700; }
+    .topbar-left p { font-size:13px; color:var(--sub); margin-top:2px; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .search-box { display:flex; align-items:center; background:var(--panel2); border:1px solid var(--borde); border-radius:12px; padding:8px 14px; gap:8px; }
+    .search-box input { background:none; border:none; outline:none; color:var(--texto); font-size:14px; width:180px; }
+    .search-box input::placeholder { color:var(--sub); }
+    .icon-btn { width:38px; height:38px; border-radius:10px; background:var(--panel2); border:1px solid var(--borde); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; color:var(--sub); transition:0.2s; position:relative; }
+    .icon-btn:hover { background:var(--borde); color:var(--texto); }
+    .notif-dot { position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:50%; background:var(--rojo); border:2px solid var(--panel); }
+
+    .content { padding:32px; flex:1; }
+
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:28px; }
+    .stat-card { background:var(--panel); border:1px solid var(--borde); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:12px; transition:transform 0.2s,box-shadow 0.2s; cursor:default; }
+    .stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+    .stat-header { display:flex; align-items:center; justify-content:space-between; }
+    .stat-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+    .stat-icon.azul  { background:rgba(37,99,235,0.15);  }
+    .stat-icon.verde { background:rgba(16,185,129,0.15); }
+    .stat-icon.amari { background:rgba(245,158,11,0.15); }
+    .stat-icon.rojo  { background:rgba(239,68,68,0.15);  }
+    .stat-trend { font-size:12px; font-weight:600; padding:4px 8px; border-radius:8px; }
+    .trend-up  { color:var(--verde);   background:rgba(16,185,129,0.12); }
+    .trend-neu { color:var(--amarillo);background:rgba(245,158,11,0.12); }
+    .stat-value { font-size:32px; font-weight:800; line-height:1; }
+    .stat-label { font-size:13px; color:var(--sub); }
+
+    .main-grid { display:grid; grid-template-columns:1fr 340px; gap:20px; margin-bottom:20px; }
+    .card { background:var(--panel); border:1px solid var(--borde); border-radius:16px; padding:22px; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .card-header h3 { font-size:15px; font-weight:700; }
+    .card-header span { font-size:12px; color:var(--sub); }
+    .btn-sm { padding:6px 14px; border-radius:8px; border:1px solid var(--borde); background:var(--panel2); color:var(--sub); font-size:12px; cursor:pointer; transition:0.2s; text-decoration:none; }
+    .btn-sm:hover { color:var(--texto); border-color:var(--azul); }
+    .btn-primary { padding:10px 20px; background:linear-gradient(135deg,var(--azul),var(--azul-dark)); color:white; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; transition:0.2s; text-decoration:none; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(37,99,235,0.35); }
+
+    .chart-area { height:200px; position:relative; display:flex; align-items:flex-end; gap:10px; }
+    .bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end; }
+    .bar { width:100%; border-radius:8px 8px 0 0; background:linear-gradient(180deg,var(--azul),var(--azul-dark)); transition:height 1s cubic-bezier(.4,0,.2,1); position:relative; cursor:pointer; }
+    .bar.alt { background:linear-gradient(180deg,var(--verde),#059669); }
+    .bar:hover::after { content:attr(data-value); position:absolute; top:-28px; left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--borde); border-radius:6px; padding:3px 8px; font-size:11px; white-space:nowrap; color:var(--texto); }
+    .bar-label { font-size:11px; color:var(--sub); }
+    .chart-legend { display:flex; gap:16px; margin-top:14px; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--sub); }
+    .legend-dot { width:10px; height:10px; border-radius:3px; }
+
+    .cita-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--borde); }
+    .cita-item:last-child { border-bottom:none; }
+    .cita-hora { font-size:12px; font-weight:700; color:var(--azul); width:46px; text-align:center; background:var(--azul-light); padding:5px 4px; border-radius:8px; flex-shrink:0; }
+    .cita-info { flex:1; }
+    .cita-info strong { font-size:13px; display:block; }
+    .cita-info span { font-size:11px; color:var(--sub); }
+    .estado-badge { font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; flex-shrink:0; }
+    .est-pend { background:rgba(245,158,11,0.15); color:var(--amarillo); }
+    .est-conf { background:rgba(37,99,235,0.15);  color:var(--azul); }
+    .est-comp { background:rgba(16,185,129,0.15); color:var(--verde); }
+    .est-canc { background:rgba(239,68,68,0.15);  color:var(--rojo); }
+
+    .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; font-size:11px; color:var(--sub); text-transform:uppercase; letter-spacing:0.06em; padding:0 0 12px; border-bottom:1px solid var(--borde); }
+    td { padding:12px 0; font-size:13px; border-bottom:1px solid var(--borde); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    .pac-name { display:flex; align-items:center; gap:10px; }
+    .pac-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:white; flex-shrink:0; }
+
+    .esp-list { display:flex; flex-direction:column; gap:14px; margin-top:4px; }
+    .esp-item { display:flex; flex-direction:column; gap:6px; }
+    .esp-row { display:flex; justify-content:space-between; font-size:13px; }
+    .esp-row span:last-child { color:var(--sub); font-size:12px; }
+    .bar-track { height:6px; background:var(--panel2); border-radius:99px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:99px; transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+
+    .hamburger { display:none; background:none; border:none; color:var(--texto); font-size:22px; cursor:pointer; }
+    @media(max-width:1200px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:900px)  { .main-grid,.bottom-grid { grid-template-columns:1fr; } }
+    @media(max-width:768px)  {
+      .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); }
+      .main { margin-left:0; } .content { padding:20px 16px; } .topbar { padding:14px 16px; }
+      .hamburger { display:block; } .search-box { display:none; } .stats-grid { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-circle">🏥</div>
+    <div><span>Medical System<br><small>Panel de control</small></span></div>
+  </div>
+  <nav>
+    <div class="nav-label">Principal</div>
+    <a class="nav-link active" href="Dashboard.html"><span class="icon">📊</span> Dashboard</a>
+    <a class="nav-link" href="Pacientes.html"><span class="icon">👥</span> Pacientes <span class="badge" id="badge-pac">0</span></a>
+    <a class="nav-link" href="Citas.html"><span class="icon">📅</span> Citas <span class="badge" id="badge-citas">0</span></a>
+    <a class="nav-link" href="Medicos.html"><span class="icon">👨‍⚕️</span> Médicos</a>
+    <div class="nav-label">Reportes</div>
+    <a class="nav-link" href="#" onclick="descargarReporte('pdf')"><span class="icon">📄</span> Exportar PDF</a>
+    <a class="nav-link" href="#" onclick="descargarReporte('excel')"><span class="icon">📊</span> Exportar Excel</a>
+    <div class="nav-label">Sistema</div>
+    <a class="nav-link" href="#"><span class="icon">⚙️</span> Configuración</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="user-avatar">A</div>
+      <div class="user-info">
+        <strong id="user-nombre">Administrador</strong>
+        <span id="user-rol">admin</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-left">
+        <h1>Dashboard</h1>
+        <p>Resumen general del sistema</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-box">
+        <span style="color:var(--sub)">🔍</span>
+        <input type="text" id="buscador-paciente" placeholder="Buscar paciente..." onkeydown="buscarPaciente(event)">
+      </div>
+      <button class="icon-btn" title="Citas pendientes" onclick="window.location.href='Citas.html'">
+        🔔 <span class="notif-dot" id="notif-dot" style="display:none"></span>
+      </button>
+      <button class="icon-btn" title="Cerrar sesión" onclick="cerrarSesion()">🚪</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon azul">👥</div><span class="stat-trend trend-up" id="trend-pac">— </span></div>
+        <div class="stat-value" id="stat-pacientes">—</div>
+        <div class="stat-label">Total Pacientes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon verde">✅</div><span class="stat-trend trend-up">hoy</span></div>
+        <div class="stat-value" id="stat-hoy">—</div>
+        <div class="stat-label">Citas Hoy</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon amari">⏳</div><span class="stat-trend trend-neu">pendientes</span></div>
+        <div class="stat-value" id="stat-pendientes">—</div>
+        <div class="stat-label">Citas Pendientes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><div class="stat-icon rojo">👨‍⚕️</div><span class="stat-trend trend-up">activos</span></div>
+        <div class="stat-value" id="stat-medicos">—</div>
+        <div class="stat-label">Médicos Activos</div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Citas por Mes</h3><span>Últimos 6 meses</span></div>
+          <a class="btn-sm" href="Citas.html">Ver todo</a>
+        </div>
+        <div class="chart-area" id="chart-barras">
+          <div style="color:var(--sub);font-size:13px;margin:auto">Cargando gráfico...</div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--azul)"></div> Citas totales</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--verde)"></div> Completadas</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Citas de Hoy</h3>
+          <a class="btn-primary" href="Citas.html">+ Nueva</a>
+        </div>
+        <div id="citas-hoy-list">
+          <p style="color:var(--sub);font-size:13px;text-align:center;padding:20px 0">Cargando citas...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3>Últimos Pacientes</h3>
+          <a class="btn-sm" href="Pacientes.html">Ver todos</a>
+        </div>
+        <table>
+          <thead><tr><th>Paciente</th><th>Cédula</th><th>Estado</th></tr></thead>
+          <tbody id="tabla-pacientes">
+            <tr><td colspan="3" style="color:var(--sub);font-size:13px">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Citas por Especialidad</h3>
+          <span id="esp-total">este mes</span>
+        </div>
+        <div class="esp-list" id="esp-list">
+          <p style="color:var(--sub);font-size:13px">Cargando...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const API = 'http://localhost:3000/api';
+  const COLORES = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'];
+
+  function getToken() { return localStorage.getItem('token'); }
+  function headers() {
+    return { 'Content-Type':'application/json', 'Authorization':`Bearer ${getToken()}` };
+  }
+
+  const estadoMap = {
+    pendiente:  { cls:'est-pend', txt:'Pendiente'  },
+    confirmada: { cls:'est-conf', txt:'Confirmada' },
+    completada: { cls:'est-comp', txt:'Completada' },
+    cancelada:  { cls:'est-canc', txt:'Cancelada'  },
+  };
+
+  // ── INIT ────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    if (!getToken()) { window.location.href = 'Login.html'; return; }
+    cargarUsuario();
+    cargarTodo();
+  });
+
+  function cargarUsuario() {
+    try {
+      const u = JSON.parse(localStorage.getItem('usuario') || '{}');
+      if (u.nombre) {
+        document.getElementById('user-nombre').textContent = u.nombre;
+        document.getElementById('user-rol').textContent    = u.rol || 'usuario';
+        document.getElementById('user-avatar').textContent = u.nombre.charAt(0).toUpperCase();
+      }
+    } catch(_) {}
+  }
+
+  async function cargarTodo() {
+    await Promise.all([
+      cargarEstadisticas(),
+      cargarCitasHoy(),
+      cargarUltimosPacientes(),
+    ]);
+  }
+
+  // ── ESTADÍSTICAS ────────────────────────────────
+  async function cargarEstadisticas() {
+    try {
+      const res  = await fetch(`${API}/reportes/estadisticas`, { headers: headers() });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.mensaje);
+
+      const t = data.totales;
+      animarContador(document.getElementById('stat-pacientes'), t.total_pacientes);
+      animarContador(document.getElementById('stat-hoy'),       t.citas_hoy);
+      animarContador(document.getElementById('stat-pendientes'),t.citas_pendientes);
+      animarContador(document.getElementById('stat-medicos'),   t.total_medicos);
+
+      document.getElementById('badge-pac').textContent   = t.total_pacientes;
+      document.getElementById('badge-citas').textContent = t.citas_pendientes;
+
+      // Mostrar punto de notificación si hay pendientes
+      if (t.citas_pendientes > 0) {
+        document.getElementById('notif-dot').style.display = 'block';
+      }
+
+      renderBarras(data.citasPorMes);
+      renderEspecialidades(data.porEspecialidad);
+
+    } catch(err) {
+      console.error('Error estadísticas:', err.message);
+      // Si falla el backend usar valores en 0
+      ['stat-pacientes','stat-hoy','stat-pendientes','stat-medicos'].forEach(id => {
+        document.getElementById(id).textContent = '0';
+      });
+    }
+  }
+
+  // ── ANIMACIÓN CONTADORES ─────────────────────────
+  function animarContador(el, target, duracion = 1200) {
+    const inicio = Date.now();
+    const tick = () => {
+      const pct  = Math.min((Date.now() - inicio) / duracion, 1);
+      const ease = 1 - Math.pow(1 - pct, 3);
+      el.textContent = Math.round(ease * target);
+      if (pct < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // ── GRÁFICO DE BARRAS ────────────────────────────
+  function renderBarras(citasPorMes) {
+    const container = document.getElementById('chart-barras');
+
+    // Si no hay datos del backend usar meses vacíos
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    let datos = [];
+
+    if (citasPorMes && citasPorMes.length) {
+      datos = citasPorMes.map(c => {
+        const [y, m] = c.mes.split('-');
+        return { mes: meses[parseInt(m) - 1], total: c.total, comp: 0 };
+      });
+    } else {
+      // Mostrar últimos 6 meses con 0
+      const hoy = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+        datos.push({ mes: meses[d.getMonth()], total: 0, comp: 0 });
+      }
+    }
+
+    const maxVal = Math.max(...datos.map(d => d.total), 1);
+    container.innerHTML = '';
+
+    datos.forEach(d => {
+      const wrap = document.createElement('div');
+      wrap.className = 'bar-wrap';
+
+      const barTotal = document.createElement('div');
+      barTotal.className = 'bar';
+      barTotal.style.height = '0px';
+      barTotal.setAttribute('data-value', d.total + ' citas');
+
+      const barComp = document.createElement('div');
+      barComp.className = 'bar alt';
+      barComp.style.height = '0px';
+      barComp.setAttribute('data-value', d.comp + ' completadas');
+
+      const label = document.createElement('div');
+      label.className = 'bar-label';
+      label.textContent = d.mes;
+
+      const barGroup = document.createElement('div');
+      barGroup.style.cssText = 'display:flex;gap:3px;align-items:flex-end;flex:1;width:100%;justify-content:center';
+      barGroup.appendChild(barTotal);
+      barGroup.appendChild(barComp);
+      wrap.appendChild(barGroup);
+      wrap.appendChild(label);
+      container.appendChild(wrap);
+
+      setTimeout(() => {
+        const maxH = 160;
+        barTotal.style.height = ((d.total / maxVal) * maxH) + 'px';
+        barTotal.style.width  = '45%';
+        barComp.style.height  = ((d.comp  / maxVal) * maxH) + 'px';
+        barComp.style.width   = '45%';
+      }, 100);
+    });
+  }
+
+  // ── CITAS DE HOY ────────────────────────────────
+  async function cargarCitasHoy() {
+    const container = document.getElementById('citas-hoy-list');
+    const hoy = new Date().toISOString().slice(0, 10);
+
+    try {
+      const res  = await fetch(`${API}/citas?fecha=${hoy}`, { headers: headers() });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.mensaje);
+
+      if (!data.datos.length) {
+        container.innerHTML = '<p style="color:var(--sub);font-size:13px;text-align:center;padding:20px 0">Sin citas para hoy</p>';
+        return;
+      }
+
+      container.innerHTML = data.datos.map(c => {
+        const e = estadoMap[c.estado] || estadoMap.pendiente;
+        return `
+          <div class="cita-item">
+            <div class="cita-hora">${c.hora ? c.hora.slice(0,5) : '—'}</div>
+            <div class="cita-info">
+              <strong>${c.paciente_nombre} ${c.paciente_apellido}</strong>
+              <span>${c.medico_nombre || '—'}</span>
+            </div>
+            <span class="estado-badge ${e.cls}">${e.txt}</span>
+          </div>`;
+      }).join('');
+
+    } catch(err) {
+      container.innerHTML = '<p style="color:var(--sub);font-size:13px;text-align:center;padding:20px 0">Sin citas para hoy</p>';
+    }
+  }
+
+  // ── ÚLTIMOS PACIENTES ────────────────────────────
+  async function cargarUltimosPacientes() {
+    const tbody = document.getElementById('tabla-pacientes');
+
+    try {
+      const res  = await fetch(`${API}/pacientes?limite=5`, { headers: headers() });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.mensaje);
+
+      if (!data.datos.length) {
+        tbody.innerHTML = `<tr><td colspan="3" style="color:var(--sub);font-size:13px">Sin pacientes registrados</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.datos.map((p, i) => `
+        <tr>
+          <td>
+            <div class="pac-name">
+              <div class="pac-avatar" style="background:${COLORES[i % 5]}">${p.nombre.charAt(0)}</div>
+              ${p.nombre} ${p.apellido}
+            </div>
+          </td>
+          <td style="color:var(--sub)">${p.cedula || '—'}</td>
+          <td><span class="estado-badge est-comp">Activo</span></td>
+        </tr>`).join('');
+
+    } catch(err) {
+      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--sub);font-size:13px">Error al cargar</td></tr>`;
+    }
+  }
+
+  // ── ESPECIALIDADES ───────────────────────────────
+  function renderEspecialidades(datos) {
+    const list = document.getElementById('esp-list');
+    const colores = ['#2563eb','#10b981','#f59e0b','#8b5cf6','#64748b'];
+
+    if (!datos || !datos.length) {
+      list.innerHTML = '<p style="color:var(--sub);font-size:13px">Sin datos de especialidades</p>';
+      return;
+    }
+
+    const total = datos.reduce((s, d) => s + d.total, 0);
+
+    list.innerHTML = datos.map((e, i) => {
+      const pct = total > 0 ? Math.round((e.total / total) * 100) : 0;
+      return `
+        <div class="esp-item">
+          <div class="esp-row">
+            <span>${e.especialidad}</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" data-pct="${pct}" style="width:0%;background:${colores[i % 5]}"></div>
+          </div>
+        </div>`;
+    }).join('');
+
+    setTimeout(() => {
+      document.querySelectorAll('.bar-fill').forEach(b => {
+        b.style.width = b.dataset.pct + '%';
+      });
+    }, 200);
+  }
+
+  // ── BUSCAR PACIENTE ─────────────────────────────
+  function buscarPaciente(e) {
+    if (e.key === 'Enter') {
+      const termino = document.getElementById('buscador-paciente').value.trim();
+      if (termino) window.location.href = `Pacientes.html?buscar=${encodeURIComponent(termino)}`;
+    }
+  }
+
+  // ── REPORTES ────────────────────────────────────
+  function descargarReporte(tipo) {
+    const token = getToken();
+    const hoy   = new Date().toISOString().slice(0, 10);
+    if (!token) { alert('Debes iniciar sesión primero.'); return; }
+
+    const url = `${API}/reportes/citas/${tipo}?desde=${hoy}&hasta=${hoy}`;
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => { if (!r.ok) throw new Error('Error al generar reporte'); return r.blob(); })
+      .then(blob => {
+        const a    = document.createElement('a');
+        a.href     = URL.createObjectURL(blob);
+        a.download = `reporte_${hoy}.${tipo === 'pdf' ? 'pdf' : 'xlsx'}`;
+        a.click();
+      })
+      .catch(err => alert('❌ Error al generar reporte: ' + err.message));
+  }
+
+  // ── CERRAR SESIÓN ────────────────────────────────
+  function cerrarSesion() {
+    if (confirm('¿Cerrar sesión?')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      window.location.href = 'Login.html';
+    }
+  }
+</script>
+</body>
+</html>
