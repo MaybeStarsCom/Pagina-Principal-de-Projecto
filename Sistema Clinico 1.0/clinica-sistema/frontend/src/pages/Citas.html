@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citas — Medical System</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; font-family:Arial,Helvetica,sans-serif; }
+    :root {
+      --azul:#2563eb; --azul-dark:#1d4ed8; --azul-light:rgba(37,99,235,0.10);
+      --fondo:#0f172a; --panel:#1e293b; --panel2:#273549; --borde:#334155;
+      --texto:#f1f5f9; --sub:#94a3b8; --verde:#10b981; --amarillo:#f59e0b; --rojo:#ef4444;
+    }
+    body { background:var(--fondo); color:var(--texto); min-height:100vh; display:flex; }
+
+    /* SIDEBAR */
+    .sidebar { width:240px; min-height:100vh; background:var(--panel); border-right:1px solid var(--borde); display:flex; flex-direction:column; position:fixed; top:0; left:0; z-index:100; }
+    .sidebar-logo { display:flex; align-items:center; gap:12px; padding:28px 24px 24px; border-bottom:1px solid var(--borde); }
+    .logo-circle { width:42px; height:42px; border-radius:50%; background:var(--azul); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .sidebar-logo span { font-size:16px; font-weight:700; }
+    .sidebar-logo small { font-size:11px; color:var(--sub); }
+    nav { flex:1; padding:20px 12px; display:flex; flex-direction:column; gap:4px; }
+    .nav-label { font-size:10px; color:var(--sub); letter-spacing:.1em; text-transform:uppercase; padding:16px 12px 6px; }
+    .nav-link { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px; color:var(--sub); text-decoration:none; font-size:14px; font-weight:500; transition:.2s; cursor:pointer; border:none; background:none; width:100%; text-align:left; }
+    .nav-link:hover { background:var(--panel2); color:var(--texto); }
+    .nav-link.active { background:var(--azul-light); color:var(--azul); border:1px solid rgba(37,99,235,0.25); }
+    .nav-link .icon { font-size:18px; width:22px; text-align:center; }
+    .badge { margin-left:auto; background:var(--azul); color:white; font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; }
+    .sidebar-footer { padding:16px 12px; border-top:1px solid var(--borde); }
+    .user-card { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:var(--panel2); }
+    .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--azul),var(--azul-dark)); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; flex-shrink:0; }
+    .user-info strong { font-size:13px; display:block; }
+    .user-info span { font-size:11px; color:var(--sub); }
+
+    /* MAIN */
+    .main { margin-left:240px; flex:1; display:flex; flex-direction:column; }
+    .topbar { background:var(--panel); border-bottom:1px solid var(--borde); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+    .topbar-left h1 { font-size:20px; font-weight:700; }
+    .topbar-left p { font-size:13px; color:var(--sub); margin-top:2px; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .icon-btn { width:38px; height:38px; border-radius:10px; background:var(--panel2); border:1px solid var(--borde); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; color:var(--sub); transition:.2s; }
+    .icon-btn:hover { background:var(--borde); color:var(--texto); }
+    .content { padding:32px; flex:1; }
+
+    /* FILTROS */
+    .filtros { display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap; align-items:center; }
+    .filtro-btn { padding:8px 16px; border-radius:20px; border:1px solid var(--borde); background:var(--panel2); color:var(--sub); font-size:13px; cursor:pointer; transition:.2s; }
+    .filtro-btn:hover { color:var(--texto); }
+    .filtro-btn.active { background:var(--azul); color:white; border-color:var(--azul); }
+    input[type="date"].filtro-date { padding:8px 14px; background:var(--panel2); border:1px solid var(--borde); border-radius:12px; color:var(--texto); font-size:13px; outline:none; cursor:pointer; }
+    .btn-primary { padding:10px 20px; background:linear-gradient(135deg,var(--azul),var(--azul-dark)); color:white; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; transition:.2s; display:flex; align-items:center; gap:8px; margin-left:auto; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(37,99,235,.35); }
+
+    /* STATS MINI */
+    .stats-mini { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-mini { background:var(--panel); border:1px solid var(--borde); border-radius:14px; padding:16px 20px; display:flex; align-items:center; gap:14px; }
+    .stat-mini-icon { font-size:22px; }
+    .stat-mini-val { font-size:22px; font-weight:800; line-height:1; }
+    .stat-mini-lbl { font-size:11px; color:var(--sub); margin-top:2px; }
+
+    /* GRID CITAS */
+    .citas-grid { display:flex; flex-direction:column; gap:12px; }
+
+    .cita-card { background:var(--panel); border:1px solid var(--borde); border-radius:14px; padding:18px 22px; display:flex; align-items:center; gap:18px; transition:.2s; }
+    .cita-card:hover { border-color:var(--azul); box-shadow:0 4px 16px rgba(37,99,235,.12); }
+
+    .cita-time { text-align:center; min-width:56px; }
+    .cita-time strong { font-size:18px; font-weight:800; color:var(--azul); display:block; }
+    .cita-time span { font-size:11px; color:var(--sub); }
+
+    .cita-divider { width:2px; height:48px; background:var(--borde); border-radius:2px; flex-shrink:0; }
+
+    .cita-info { flex:1; }
+    .cita-info h4 { font-size:14px; font-weight:700; margin-bottom:4px; }
+    .cita-info p { font-size:12px; color:var(--sub); }
+
+    .cita-medico { display:flex; align-items:center; gap:8px; min-width:180px; }
+    .med-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:white; flex-shrink:0; }
+
+    .cita-estado { min-width:110px; text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+    .badge-estado { font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; }
+    .est-pend { background:rgba(245,158,11,.15); color:var(--amarillo); }
+    .est-conf { background:rgba(37,99,235,.15); color:var(--azul); }
+    .est-comp { background:rgba(16,185,129,.15); color:var(--verde); }
+    .est-canc { background:rgba(239,68,68,.15); color:var(--rojo); }
+
+    .cita-actions { display:flex; gap:6px; }
+    .btn-icon { width:30px; height:30px; border-radius:8px; border:1px solid var(--borde); background:var(--panel2); color:var(--sub); font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s; }
+    .btn-icon:hover { color:var(--texto); border-color:var(--azul); }
+    .btn-icon.danger:hover { color:var(--rojo); border-color:var(--rojo); }
+
+    /* EMPTY */
+    .empty { text-align:center; padding:60px 20px; color:var(--sub); }
+    .empty-icon { font-size:48px; margin-bottom:12px; }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:var(--panel); border:1px solid var(--borde); border-radius:20px; padding:32px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; }
+    .modal h2 { font-size:18px; font-weight:700; margin-bottom:6px; }
+    .modal p { font-size:13px; color:var(--sub); margin-bottom:24px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-group.full { grid-column:1/-1; }
+    .form-group label { font-size:12px; color:var(--sub); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+    .form-group input, .form-group select, .form-group textarea { padding:11px 14px; background:var(--panel2); border:1px solid var(--borde); border-radius:12px; color:var(--texto); font-size:14px; outline:none; transition:.2s; }
+    .form-group input:focus, .form-group select:focus { border-color:var(--azul); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+    .form-group select option { background:var(--panel2); }
+    .form-group textarea { resize:vertical; min-height:70px; }
+    .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+    .btn-cancel { padding:10px 20px; background:var(--panel2); color:var(--sub); border:1px solid var(--borde); border-radius:12px; font-size:13px; cursor:pointer; }
+
+    .hamburger { display:none; background:none; border:none; color:var(--texto); font-size:22px; cursor:pointer; }
+    @media(max-width:768px) {
+      .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); }
+      .main { margin-left:0; } .content { padding:16px; } .topbar { padding:14px 16px; }
+      .hamburger { display:block; } .stats-mini { grid-template-columns:1fr 1fr; }
+      .cita-medico, .cita-time span { display:none; }
+      .form-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-circle">🏥</div>
+    <div><span>Medical System<br><small>Panel de control</small></span></div>
+  </div>
+  <nav>
+    <div class="nav-label">Principal</div>
+    <a class="nav-link" href="Dashboard.html"><span class="icon">📊</span> Dashboard</a>
+    <a class="nav-link" href="Pacientes.html"><span class="icon">👥</span> Pacientes</a>
+    <a class="nav-link active" href="Citas.html"><span class="icon">📅</span> Citas <span class="badge" id="badge-citas">0</span></a>
+    <a class="nav-link" href="Medicos.html"><span class="icon">👨‍⚕️</span> Médicos</a>
+    <div class="nav-label">Reportes</div>
+    <a class="nav-link" href="#"><span class="icon">📄</span> Exportar PDF</a>
+    <a class="nav-link" href="#"><span class="icon">📊</span> Exportar Excel</a>
+    <div class="nav-label">Sistema</div>
+    <a class="nav-link" href="#"><span class="icon">⚙️</span> Configuración</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar" id="user-avatar">A</div>
+      <div class="user-info">
+        <strong id="user-nombre">Administrador</strong>
+        <span id="user-rol">admin</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div class="topbar-left">
+        <h1>Citas Médicas</h1>
+        <p>Agenda y programación de consultas</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="cerrarSesion()" title="Cerrar sesión">🚪</button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- STATS MINI -->
+    <div class="stats-mini">
+      <div class="stat-mini">
+        <div class="stat-mini-icon">📅</div>
+        <div><div class="stat-mini-val" id="s-total">0</div><div class="stat-mini-lbl">Total citas</div></div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon">⏳</div>
+        <div><div class="stat-mini-val" id="s-pend">0</div><div class="stat-mini-lbl">Pendientes</div></div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon">✅</div>
+        <div><div class="stat-mini-val" id="s-comp">0</div><div class="stat-mini-lbl">Completadas</div></div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon">❌</div>
+        <div><div class="stat-mini-val" id="s-canc">0</div><div class="stat-mini-lbl">Canceladas</div></div>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filtros">
+      <button class="filtro-btn active" onclick="setFiltro('todos',this)">Todas</button>
+      <button class="filtro-btn" onclick="setFiltro('pendiente',this)">Pendientes</button>
+      <button class="filtro-btn" onclick="setFiltro('confirmada',this)">Confirmadas</button>
+      <button class="filtro-btn" onclick="setFiltro('completada',this)">Completadas</button>
+      <button class="filtro-btn" onclick="setFiltro('cancelada',this)">Canceladas</button>
+      <input type="date" class="filtro-date" id="filtro-fecha" onchange="renderCitas()">
+      <button class="btn-primary" onclick="abrirModal()">➕ Nueva Cita</button>
+    </div>
+
+    <!-- LISTA -->
+    <div class="citas-grid" id="citas-grid"></div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-titulo">Nueva Cita</h2>
+    <p>Complete los datos para agendar la consulta</p>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Paciente *</label>
+        <select id="f-paciente">
+          <option value="">Seleccionar paciente</option>
+          <option value="1">Ana Rodríguez</option>
+          <option value="2">Carlos Méndez</option>
+          <option value="3">Luis Fernández</option>
+          <option value="4">Sofía Castro</option>
+          <option value="5">Pedro García</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Médico *</label>
+        <select id="f-medico">
+          <option value="">Seleccionar médico</option>
+          <option value="1">Dr. Juan Pérez — Medicina General</option>
+          <option value="2">Dra. María López — Pediatría</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha *</label>
+        <input type="date" id="f-fecha">
+      </div>
+      <div class="form-group">
+        <label>Hora *</label>
+        <select id="f-hora">
+          <option value="">Seleccionar</option>
+          <option>08:00</option><option>08:30</option><option>09:00</option>
+          <option>09:30</option><option>10:00</option><option>10:30</option>
+          <option>11:00</option><option>11:30</option><option>14:00</option>
+          <option>14:30</option><option>15:00</option><option>15:30</option>
+          <option>16:00</option><option>16:30</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Motivo de consulta</label>
+        <textarea id="f-motivo" placeholder="Describir el motivo..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarCita()">💾 Guardar Cita</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let citas = [
+    { id:1, hora:'08:30', fecha:'2026-06-18', paciente:'Ana Rodríguez',  medico:'Dr. Juan Pérez',   especialidad:'Medicina General', motivo:'Control mensual',      estado:'completada', color:'#2563eb' },
+    { id:2, hora:'09:00', fecha:'2026-06-18', paciente:'Carlos Méndez',  medico:'Dra. María López', especialidad:'Pediatría',        motivo:'Fiebre y tos',         estado:'confirmada',  color:'#10b981' },
+    { id:3, hora:'10:15', fecha:'2026-06-18', paciente:'Luis Fernández', medico:'Dr. Juan Pérez',   especialidad:'Medicina General', motivo:'Dolor de cabeza',       estado:'pendiente',   color:'#f59e0b' },
+    { id:4, hora:'11:00', fecha:'2026-06-18', paciente:'Sofía Castro',   medico:'Dra. María López', especialidad:'Pediatría',        motivo:'Vacunación',            estado:'pendiente',   color:'#ef4444' },
+    { id:5, hora:'14:30', fecha:'2026-06-18', paciente:'Pedro García',   medico:'Dr. Juan Pérez',   especialidad:'Medicina General', motivo:'Revisión general',      estado:'cancelada',   color:'#8b5cf6' },
+    { id:6, hora:'09:30', fecha:'2026-06-19', paciente:'María López',    medico:'Dra. María López', especialidad:'Pediatría',        motivo:'Consulta de rutina',    estado:'pendiente',   color:'#06b6d4' },
+  ];
+
+  let filtroEstado = 'todos';
+
+  const estadoMap = {
+    pendiente:  { cls:'est-pend', txt:'Pendiente'  },
+    confirmada: { cls:'est-conf', txt:'Confirmada' },
+    completada: { cls:'est-comp', txt:'Completada' },
+    cancelada:  { cls:'est-canc', txt:'Cancelada'  },
+  };
+
+  window.addEventListener('DOMContentLoaded', () => {
+    cargarUsuario();
+    const hoy = new Date().toISOString().slice(0,10);
+    document.getElementById('f-fecha').value = hoy;
+    actualizarStats();
+    renderCitas();
+  });
+
+  function cargarUsuario() {
+    try {
+      const u = JSON.parse(localStorage.getItem('usuario') || '{}');
+      if (u.nombre) {
+        document.getElementById('user-nombre').textContent = u.nombre;
+        document.getElementById('user-rol').textContent    = u.rol;
+        document.getElementById('user-avatar').textContent = u.nombre.charAt(0).toUpperCase();
+      }
+    } catch(_) {}
+  }
+
+  function actualizarStats() {
+    document.getElementById('s-total').textContent = citas.length;
+    document.getElementById('s-pend').textContent  = citas.filter(c=>c.estado==='pendiente').length;
+    document.getElementById('s-comp').textContent  = citas.filter(c=>c.estado==='completada').length;
+    document.getElementById('s-canc').textContent  = citas.filter(c=>c.estado==='cancelada').length;
+    document.getElementById('badge-citas').textContent = citas.filter(c=>c.estado==='pendiente').length;
+  }
+
+  function setFiltro(estado, btn) {
+    filtroEstado = estado;
+    document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCitas();
+  }
+
+  function renderCitas() {
+    const fecha = document.getElementById('filtro-fecha').value;
+    let lista = citas.filter(c => {
+      const estadoOk = filtroEstado === 'todos' || c.estado === filtroEstado;
+      const fechaOk  = !fecha || c.fecha === fecha;
+      return estadoOk && fechaOk;
+    });
+
+    lista.sort((a,b) => a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora));
+
+    const grid = document.getElementById('citas-grid');
+    if (!lista.length) {
+      grid.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><p>No hay citas con los filtros seleccionados.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = lista.map(c => {
+      const e = estadoMap[c.estado];
+      return `
+        <div class="cita-card">
+          <div class="cita-time">
+            <strong>${c.hora}</strong>
+            <span>${formatFecha(c.fecha)}</span>
+          </div>
+          <div class="cita-divider"></div>
+          <div class="cita-info">
+            <h4>${c.paciente}</h4>
+            <p>${c.motivo || 'Sin motivo registrado'}</p>
+          </div>
+          <div class="cita-medico">
+            <div class="med-avatar" style="background:${c.color}">${c.medico.charAt(4)}</div>
+            <div>
+              <div style="font-size:12px;font-weight:600">${c.medico}</div>
+              <div style="font-size:11px;color:var(--sub)">${c.especialidad}</div>
+            </div>
+          </div>
+          <div class="cita-estado">
+            <span class="badge-estado ${e.cls}">${e.txt}</span>
+            <div class="cita-actions">
+              ${c.estado === 'pendiente' ? `<button class="btn-icon" title="Confirmar" onclick="cambiarEstado(${c.id},'confirmada')">✅</button>` : ''}
+              ${c.estado === 'confirmada' ? `<button class="btn-icon" title="Completar" onclick="cambiarEstado(${c.id},'completada')">🏁</button>` : ''}
+              ${c.estado !== 'cancelada' && c.estado !== 'completada' ? `<button class="btn-icon danger" title="Cancelar" onclick="cambiarEstado(${c.id},'cancelada')">❌</button>` : ''}
+              <button class="btn-icon danger" title="Eliminar" onclick="eliminarCita(${c.id})">🗑️</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function formatFecha(f) {
+    if (!f) return '';
+    const [y,m,d] = f.split('-');
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${d} ${meses[parseInt(m)-1]}`;
+  }
+
+  function cambiarEstado(id, estado) {
+    const c = citas.find(c=>c.id===id);
+    if (c) { c.estado = estado; actualizarStats(); renderCitas(); }
+  }
+
+  function eliminarCita(id) {
+    if (confirm('¿Eliminar esta cita?')) {
+      citas = citas.filter(c=>c.id!==id);
+      actualizarStats();
+      renderCitas();
+    }
+  }
+
+  function abrirModal() {
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function cerrarModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  function guardarCita() {
+    const pacId  = document.getElementById('f-paciente').value;
+    const medId  = document.getElementById('f-medico').value;
+    const fecha  = document.getElementById('f-fecha').value;
+    const hora   = document.getElementById('f-hora').value;
+    const motivo = document.getElementById('f-motivo').value.trim();
+
+    if (!pacId || !medId || !fecha || !hora) { alert('Paciente, médico, fecha y hora son obligatorios.'); return; }
+
+    const pacOpt = document.getElementById('f-paciente');
+    const medOpt = document.getElementById('f-medico');
+    const medTxt = medOpt.options[medOpt.selectedIndex].text;
+
+    citas.push({
+      id:           Date.now(),
+      hora,
+      fecha,
+      paciente:     pacOpt.options[pacOpt.selectedIndex].text,
+      medico:       medTxt.split(' — ')[0],
+      especialidad: medTxt.split(' — ')[1] || '',
+      motivo,
+      estado:       'pendiente',
+      color:        '#2563eb'
+    });
+
+    cerrarModal();
+    actualizarStats();
+    renderCitas();
+  }
+
+  function cerrarSesion() {
+    if (confirm('¿Cerrar sesión?')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      window.location.href = 'Login.html';
+    }
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+  });
+</script>
+</body>
+</html>
